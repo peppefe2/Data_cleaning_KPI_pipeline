@@ -12,7 +12,6 @@ def parse_euro_amount(raw_val: object) -> float | None:
     s = re.sub(r"[^\d,.\-]", "", s)
     if not s:
         return None
-    # Formato europeo tipico: 1.234,56 -> 1234.56
     if "," in s and "." in s:
         s = s.replace(".", "").replace(",", ".")
     elif "," in s:
@@ -23,13 +22,12 @@ def parse_euro_amount(raw_val: object) -> float | None:
         return None
 
 
-def parse_order_date(raw_val: object) -> pd.Timestamp | pd.NaT:
+def parse_order_date(raw_val: object) -> pd.Timestamp:
     if raw_val is None or pd.isna(raw_val):
         return pd.NaT
     s = str(raw_val).strip()
     if not s:
         return pd.NaT
-    # Prova prima YYYY-MM-DD, poi DD/MM/YYYY
     dt = pd.to_datetime(s, format="%Y-%m-%d", errors="coerce")
     if pd.isna(dt):
         dt = pd.to_datetime(s, format="%d/%m/%Y", errors="coerce")
@@ -51,7 +49,6 @@ def clean_orders(input_path: Path, clean_out: Path, rejected_out: Path) -> None:
     df["order_date_clean"] = df["order_date"].apply(parse_order_date)
     df["amount_clean"] = df["amount_raw"].apply(parse_euro_amount)
 
-    # Identifica duplicati su order_id_clean (mantiene la prima occorrenza)
     is_duplicate = df.duplicated(subset=["order_id_clean"], keep="first")
 
     reasons = []
